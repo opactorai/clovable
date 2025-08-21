@@ -8,6 +8,9 @@ let browserOpened = false;
 // Check if auto-open is disabled via environment variable
 const shouldOpenBrowser = process.env.BROWSER !== 'false' && process.env.BROWSER !== 'none';
 
+// Get the web port from environment variable or use default
+const webPort = process.env.WEB_PORT || 3000;
+
 // Function to open browser after a delay
 const openBrowserOnce = () => {
   if (browserOpened || !shouldOpenBrowser) return;
@@ -16,20 +19,20 @@ const openBrowserOnce = () => {
   // Wait for server to be ready, then open browser
   setTimeout(async () => {
     try {
-      const url = 'http://localhost:3000';
+      const url = `http://localhost:${webPort}`;
       // Dynamic import for ESM module
       const open = (await import('open')).default;
       await open(url);
       console.log(`\n🚀 Browser opened at ${url}`);
     } catch (error) {
-      console.log(`\n⚠️  Could not open browser automatically. Please visit http://localhost:3000 manually.`);
+      console.log(`\n⚠️  Could not open browser automatically. Please visit http://localhost:${webPort} manually.`);
       console.log('Error:', error.message);
     }
   }, 4000); // 4 second delay to ensure server is ready
 };
 
-// Start Next.js dev server
-const next = spawn('npx', ['next', 'dev', '--turbo'], {
+// Start Next.js dev server with the specified port
+const next = spawn('npx', ['next', 'dev', '--turbo', '--port', webPort.toString()], {
   stdio: 'inherit',
   shell: true
 });
