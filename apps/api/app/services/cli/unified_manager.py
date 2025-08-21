@@ -51,6 +51,10 @@ MODEL_MAPPING = {
         "claude-opus-4.1": "opus-4.1",
         "claude-sonnet-4-20250514": "sonnet-4",
         "claude-opus-4-1-20250805": "opus-4.1"
+    },
+    "qwen": {
+        "qwen3-coder": "qwen3-coder",
+        "qwen-coder": "qwen-coder"
     }
 }
 
@@ -58,6 +62,7 @@ MODEL_MAPPING = {
 class CLIType(str, Enum):
     CLAUDE = "claude"
     CURSOR = "cursor"
+    QWEN = "qwen"
 
 
 class BaseCLI(ABC):
@@ -803,6 +808,152 @@ node_modules/
             self.session_mapping[project_id] = session_id
 
 
+class QwenCodeCLI(BaseCLI):
+    """Qwen Code CLI implementation"""
+
+    def __init__(self):
+        super().__init__(CLIType.QWEN)
+
+    async def check_availability(self) -> Dict[str, Any]:
+        """Check if Qwen Code CLI is available"""
+        try:
+            # Check if qwen-code is installed and working
+            result = await asyncio.create_subprocess_shell(
+                "qwen-code --version",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            stdout, stderr = await result.communicate()
+
+            if result.returncode != 0:
+                return {
+                    "available": False,
+                    "configured": False,
+                    "error": "Qwen Code CLI not installed or not working.\n\nTo install:\n1. Install Qwen Code: npm install -g @qwen-code/qwen-code\n2. Configure your API key if needed."
+                }
+
+            # Check if help output contains expected content
+            version_output = stdout.decode() + stderr.decode()
+            if "qwen-code" not in version_output.lower():
+                return {
+                    "available": False,
+                    "configured": False,
+                    "error": "Qwen Code CLI not responding correctly.\n\nPlease try reinstalling: npm install -g @qwen-code/qwen-code"
+                }
+
+            return {
+                "available": True,
+                "configured": True,
+                "models": self.get_supported_models(),
+                "default_models": ["qwen3-coder"]
+            }
+        except Exception as e:
+            return {
+                "available": False,
+                "configured": False,
+                "error": f"Failed to check Qwen Code: {str(e)}\n\nTo install:\n1. Install Qwen Code: npm install -g @qwen-code/qwen-code"
+            }
+
+    async def execute_with_streaming(
+        self,
+        instruction: str,
+        project_path: str,
+        session_id: Optional[str] = None,
+        log_callback: Optional[Callable] = None,
+        images: Optional[List[Dict[str, Any]]] = None,
+        model: Optional[str] = None,
+        is_initial_prompt: bool = False
+    ) -> AsyncGenerator[Message, None]:
+        """Execute Qwen Code CLI with stream-json format"""
+        cmd = [
+            "qwen-code",
+            "--prompt", instruction,
+            "--output-format", "stream-json"
+        ]
+
+        if model:
+            cli_model = self._get_cli_model_name(model)
+            if cli_model:
+                cmd.extend(["--model", cli_model])
+
+        project_repo_path = os.path.join(project_path, "repo")
+        if not os.path.exists(project_repo_path):
+            project_repo_path = project_path
+
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=project_repo_path
+            )
+
+            async for line in process.stdout:
+                line_str = line.decode().strip()
+                if not line_str:
+                    continue
+
+                try:
+                    event = json.loads(line_str)
+                    # This part will need to be adapted based on the actual output of Qwen Code CLI
+                    # For now, I'll assume a similar structure to Cursor/Gemini
+                    message = self._handle_cursor_stream_json(event, project_path, session_id)
+                    if message:
+                        yield message
+                except json.JSONDecodeError:
+                    yield Message(
+                        id=str(uuid.uuid4()),
+                        project_id=project_path,
+                        role="assistant",
+                        message_type="error",
+                        content=f"Failed to parse Qwen Code output: {line_str}",
+                        metadata_json={"cli_type": "qwen", "raw_output": line_str},
+                        session_id=session_id,
+                        created_at=datetime.utcnow()
+                    )
+
+            stderr_output = await process.stderr.read()
+            if stderr_output:
+                yield Message(
+                    id=str(uuid.uuid4()),
+                    project_id=project_path,
+                    role="assistant",
+                    message_type="error",
+                    content=f"Qwen Code CLI Error: {stderr_output.decode()}",
+                    metadata_json={"cli_type": "qwen"},
+                    session_id=session_id,
+                    created_at=datetime.utcnow()
+                )
+
+        except FileNotFoundError:
+            yield Message(
+                id=str(uuid.uuid4()),
+                project_id=project_path,
+                role="assistant",
+                message_type="error",
+                content="Qwen Code CLI not found. Please install with: npm install -g @qwen-code/qwen-code",
+                metadata_json={"error": "cli_not_found", "cli_type": "qwen"},
+                session_id=session_id,
+                created_at=datetime.utcnow()
+            )
+        except Exception as e:
+            yield Message(
+                id=str(uuid.uuid4()),
+                project_id=project_path,
+                role="assistant",
+                message_type="error",
+                content=f"Qwen Code execution failed: {str(e)}",
+                metadata_json={"error": "execution_failed", "cli_type": "qwen", "exception": str(e)},
+                session_id=session_id,
+                created_at=datetime.utcnow()
+            )
+
+    async def get_session_id(self, project_id: str) -> Optional[str]:
+        return None
+
+    async def set_session_id(self, project_id: str, session_id: str) -> None:
+        pass
+
 class CursorAgentCLI(BaseCLI):
     """Cursor Agent CLI implementation with stream-json support and session continuity"""
     
@@ -1300,7 +1451,8 @@ class UnifiedCLIManager:
         # Initialize CLI adapters with database session
         self.cli_adapters = {
             CLIType.CLAUDE: ClaudeCodeCLI(),  # Use SDK implementation if available
-            CLIType.CURSOR: CursorAgentCLI(db_session=db)
+            CLIType.CURSOR: CursorAgentCLI(db_session=db),
+            CLIType.QWEN: QwenCodeCLI()
         }
     
     async def execute_instruction(

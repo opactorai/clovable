@@ -20,6 +20,11 @@ CLI_OPTIONS = [
         "name": "Cursor Agent",
         "check_command": ["cursor-agent", "--version"]
     },
+    {
+        "id": "qwen",
+        "name": "Qwen Code",
+        "check_command": ["qwen-code", "--version"]
+    }
 ]
 
 class CLIStatusResponse(BaseModel):
@@ -83,10 +88,11 @@ async def get_cli_status() -> Dict[str, Any]:
     results = {}
     
     # 새로운 UnifiedCLIManager의 CLI 인스턴스 사용
-    from app.services.cli.unified_manager import ClaudeCodeCLI, CursorAgentCLI
+    from app.services.cli.unified_manager import ClaudeCodeCLI, CursorAgentCLI, QwenCodeCLI
     cli_instances = {
         "claude": ClaudeCodeCLI(),
-        "cursor": CursorAgentCLI()
+        "cursor": CursorAgentCLI(),
+        "qwen": QwenCodeCLI()
     }
     
     # 모든 CLI를 병렬로 확인
@@ -118,7 +124,8 @@ GLOBAL_SETTINGS = {
     "default_cli": "claude",
     "cli_settings": {
         "claude": {"model": "claude-sonnet-4"},
-        "cursor": {"model": "gpt-5"}
+        "cursor": {"model": "gpt-5"},
+        "qwen": {"model": "qwen3-coder"}
     }
 }
 

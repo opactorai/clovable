@@ -46,6 +46,13 @@ How to start? Simply login to Claude Code (or Cursor CLI), start Claudable, and 
   # Login
   cursor-agent login
   ```
+- **[Qwen Code](https://github.com/qwen-code/qwen-code)**: A fork of Gemini CLI, adapted for the Qwen3-Coder model line.
+  ```bash
+  # Install
+  npm install -g @qwen-code/qwen-code
+  # Configure (optional, can use environment variables)
+  qwen-code config set QWEN_API_KEY your-api-key
+  ```
 
 **Database & Deployment:**
 - **[Supabase](https://supabase.com/)**: Connect production-ready PostgreSQL database directly to your project.
