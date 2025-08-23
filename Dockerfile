@@ -7,22 +7,24 @@ RUN apk add --no-cache python3 py3-pip python3-dev build-base git
 # set working directory
 WORKDIR /app
 
-# copy package files
+# copy package files and scripts
 COPY package*.json ./
+COPY scripts ./scripts
 COPY apps/web/package*.json ./apps/web/
 COPY apps/api/requirements.txt ./apps/api/
 
-# install node dependencies
-RUN npm ci --only=production
-
-# install web dependencies
-WORKDIR /app/apps/web
-RUN npm ci --only=production
+# install node dependencies without running postinstall
+RUN npm ci --only=production --ignore-scripts
 
 # build stage for next.js
 FROM base AS builder
 WORKDIR /app
 COPY . .
+
+# install all dependencies for build
+RUN npm ci --ignore-scripts
+WORKDIR /app/apps/web
+RUN npm ci
 
 # build next.js app
 WORKDIR /app/apps/web
