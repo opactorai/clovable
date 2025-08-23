@@ -2,7 +2,7 @@
  * Environment Settings Component
  * Manage environment variables
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080';
 
@@ -24,11 +24,7 @@ export function EnvironmentSettings({ projectId }: EnvironmentSettingsProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    loadEnvironmentVariables();
-  }, [projectId]);
-
-  const loadEnvironmentVariables = async () => {
+  const loadEnvironmentVariables = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE}/api/env/${projectId}`);
@@ -41,7 +37,11 @@ export function EnvironmentSettings({ projectId }: EnvironmentSettingsProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    loadEnvironmentVariables();
+  }, [loadEnvironmentVariables]);
 
   const handleAdd = async () => {
     if (!newKey || !newValue) return;

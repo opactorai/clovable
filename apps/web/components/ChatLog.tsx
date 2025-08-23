@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef, ReactElement } from 'react';
+import React, { useEffect, useState, useRef, ReactElement, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { useWebSocket } from '../hooks/useWebSocket';
@@ -9,7 +9,7 @@ import ToolResultItem from './ToolResultItem';
 // Tool Message Component - Enhanced with new design
 const ToolMessage = ({ content, metadata }: { content: unknown; metadata?: { tool_name?: string; summary?: string; description?: string; file_path?: string; [key: string]: unknown } }) => {
   // Process tool content to extract action and file path
-  const processToolContent = (rawContent: unknown) => {
+  const processToolContent = (rawContent: unknown): { action: 'Edited' | 'Created' | 'Read' | 'Deleted' | 'Generated' | 'Searched' | 'Executed', filePath: string, cleanContent?: string, toolName: string } => {
     let processedContent = '' as string;
     let action: 'Edited' | 'Created' | 'Read' | 'Deleted' | 'Generated' | 'Searched' | 'Executed' = 'Executed';
     let filePath = '';
@@ -247,7 +247,7 @@ export default function ChatLog({ projectId, onSessionStatusChange, onProjectSta
   useEffect(scrollToBottom, [messages, logs]);
 
   // Check for active session on component mount
-  const checkActiveSession = async () => {
+  const checkActiveSession = useCallback(async () => {
     // NOTE: Active session endpoint doesn't exist in backend
     // Session management is handled through WebSocket
     setActiveSession(null);
@@ -274,10 +274,10 @@ export default function ChatLog({ projectId, onSessionStatusChange, onProjectSta
     //   console.error('Failed to check active session:', error);
     //   onSessionStatusChange?.(false);
     // }
-  };
+  }, [onSessionStatusChange]);
 
   // Poll session status periodically
-  const startSessionPolling = (sessionId: string) => {
+  const startSessionPolling = useCallback((sessionId: string) => {
     if (pollIntervalRef.current) {
       clearInterval(pollIntervalRef.current);
     }
@@ -305,10 +305,10 @@ export default function ChatLog({ projectId, onSessionStatusChange, onProjectSta
         console.error('Error polling session status:', error);
       }
     }, 3000); // Poll every 3 seconds
-  };
+  }, [onSessionStatusChange, projectId]);
 
   // Load chat history
-  const loadChatHistory = async () => {
+  const loadChatHistory = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`${API_BASE}/api/chat/${projectId}/messages`);
@@ -321,7 +321,7 @@ export default function ChatLog({ projectId, onSessionStatusChange, onProjectSta
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
 
   // Initial load
   useEffect(() => {
@@ -345,7 +345,7 @@ export default function ChatLog({ projectId, onSessionStatusChange, onProjectSta
         pollIntervalRef.current = null;
       }
     };
-  }, [projectId]);
+  }, [projectId, checkActiveSession, loadChatHistory]);
 
   // Handle log entries from other WebSocket data
   const handleWebSocketData = (data: any) => {

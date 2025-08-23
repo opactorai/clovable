@@ -114,7 +114,7 @@ export default function GitHubRepoModal({
       const sanitized = sanitizeRepoName(projectName || projectId || '');
       setRepoName(sanitized);
     }
-  }, [isOpen, projectName, projectId]);
+  }, [isOpen, projectName, projectId, repoName]);
 
   // Validate repo name when it changes
   useEffect(() => {

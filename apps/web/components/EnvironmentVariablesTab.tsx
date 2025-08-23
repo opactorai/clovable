@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080';
@@ -26,11 +26,7 @@ export default function EnvironmentVariablesTab({ projectId }: EnvironmentVariab
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
-  useEffect(() => {
-    loadEnvVars();
-  }, [projectId]);
-
-  const loadEnvVars = async () => {
+  const loadEnvVars = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`${API_BASE}/api/env/${projectId}`);
@@ -45,7 +41,11 @@ export default function EnvironmentVariablesTab({ projectId }: EnvironmentVariab
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    loadEnvVars();
+  }, [loadEnvVars]);
 
   const saveEnvVar = async (key: string, value: string, description?: string) => {
     setIsSaving(true);
@@ -389,7 +389,7 @@ export default function EnvironmentVariablesTab({ projectId }: EnvironmentVariab
               </h4>
               <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                 <p>• All variables are securely encrypted and stored</p>
-                <p>• Changes are automatically synced to your project's .env file</p>
+                <p>• Changes are automatically synced to your project&apos;s .env file</p>
                 <p>• Variables are available during build and runtime</p>
                 <p>• Use NEXT_PUBLIC_ prefix for client-side variables</p>
               </div>

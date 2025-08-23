@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { MotionDiv, MotionH3, MotionP, MotionButton } from '../../../lib/motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { FaCode, FaDesktop, FaMobileAlt, FaPlay, FaStop, FaSync, FaCog, FaRocket, FaFolder, FaFolderOpen, FaFile, FaFileCode, FaCss3Alt, FaHtml5, FaJs, FaReact, FaPython, FaDocker, FaGitAlt, FaMarkdown, FaDatabase, FaPhp, FaJava, FaRust, FaVuejs, FaLock, FaHome, FaChevronUp, FaChevronRight, FaChevronDown } from 'react-icons/fa';
 import { SiTypescript, SiGo, SiRuby, SiSvelte, SiJson, SiYaml, SiCplusplus } from 'react-icons/si';
 import { VscJson } from 'react-icons/vsc';
@@ -191,6 +192,7 @@ export default function ChatPage({ params }: Params) {
     setTimeout(() => {
       sendInitialPrompt(initialPromptFromUrl);
     }, 300);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const loadDeployStatus = useCallback(async () => {
@@ -256,6 +258,7 @@ export default function ChatPage({ params }: Params) {
     } catch (e) {
       console.warn('Failed to check current deployment', e);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   const startDeploymentPolling = useCallback((depId: string) => {
@@ -351,7 +354,7 @@ export default function ChatPage({ params }: Params) {
     }, 1000); // 1초 간격으로 변경
   }, [projectId]);
 
-  async function start() {
+  const start = useCallback(async () => {
     try {
       setIsStartingPreview(true);
       setPreviewInitializationMessage('Starting development server...');
@@ -379,18 +382,18 @@ export default function ChatPage({ params }: Params) {
       setPreviewInitializationMessage('An error occurred');
       setTimeout(() => setIsStartingPreview(false), 2000);
     }
-  }
+  }, [projectId]);
 
-  async function stop() {
+  const stop = useCallback(async () => {
     try {
       await fetch(`${API_BASE}/api/projects/${projectId}/preview/stop`, { method: 'POST' });
       setPreviewUrl(null);
     } catch (error) {
       console.error('Error stopping preview:', error);
     }
-  }
+  }, [projectId]);
 
-  async function loadTree(dir = '.') {
+  const loadTree = useCallback(async (dir = '.') => {
     try {
       const r = await fetch(`${API_BASE}/api/repo/${projectId}/tree?dir=${encodeURIComponent(dir)}`);
       const data = await r.json();
@@ -425,7 +428,7 @@ export default function ChatPage({ params }: Params) {
       console.error('Failed to load tree:', error);
       setTree([]);
     }
-  }
+  }, [projectId]);
 
   // Load subdirectory contents
   async function loadSubdirectory(dir: string): Promise<Entry[]> {
@@ -706,7 +709,7 @@ export default function ChatPage({ params }: Params) {
     }
   }
 
-  async function loadProjectInfo() {
+  const loadProjectInfo = useCallback(async () => {
     try {
       const r = await fetch(`${API_BASE}/api/projects/${projectId}`);
       if (r.ok) {
@@ -763,7 +766,7 @@ export default function ChatPage({ params }: Params) {
       setProjectStatus('active');
       setIsInitializing(false);
     }
-  }
+  }, [projectId, searchParams]);
 
   // Handle image upload with base64 conversion
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -929,7 +932,7 @@ export default function ChatPage({ params }: Params) {
   };
 
   // Function to send initial prompt automatically
-  const sendInitialPrompt = async (initialPrompt: string) => {
+  const sendInitialPrompt = useCallback(async (initialPrompt: string) => {
     // 이미 전송했으면 다시 전송하지 않음
     if (initialPromptSent) {
       return;
@@ -987,7 +990,7 @@ export default function ChatPage({ params }: Params) {
     } finally {
       setIsRunning(false);
     }
-  };
+  }, [projectId, preferredCli, initialPromptSent]);
 
   const handleRetryInitialization = async () => {
     setProjectStatus('initializing');
@@ -1041,7 +1044,7 @@ export default function ChatPage({ params }: Params) {
     }
     
     previousActiveState.current = hasActiveRequests;
-  }, [hasActiveRequests, previewUrl]);
+  }, [hasActiveRequests, previewUrl, start, stop]);
 
   useEffect(() => { 
     let mounted = true;
@@ -1099,7 +1102,7 @@ export default function ChatPage({ params }: Params) {
           .catch(() => {});
       }
     };
-  }, [projectId, previewUrl, loadDeployStatus, checkCurrentDeployment]);
+  }, [projectId, previewUrl, loadDeployStatus, checkCurrentDeployment, projectStatus, loadProjectInfo, loadTree]);
 
 
   // Show loading UI if project is initializing
@@ -1607,7 +1610,7 @@ export default function ChatPage({ params }: Params) {
                           Connection Issue
                         </h3>
                         <p className="text-gray-600 dark:text-gray-400 mb-4">
-                          The preview couldn't load properly. Try clicking the refresh button to reload the page.
+                          The preview couldn&apos;t load properly. Try clicking the refresh button to reload the page.
                         </p>
                         <button
                           className="flex items-center gap-2 mx-auto px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
@@ -1639,11 +1642,14 @@ export default function ChatPage({ params }: Params) {
                         className="text-center"
                       >
                         {/* Claudable Symbol */}
-                        <img 
-                          src="/Claudable_simbol.png" 
-                          alt="Claudable" 
-                          className="w-40 h-40 opacity-90 object-contain mx-auto mb-8"
-                        />
+                        <div className="w-40 h-40 relative mx-auto mb-8">
+                          <Image 
+                            src="/Claudable_simbol.png" 
+                            alt="Claudable" 
+                            fill
+                            className="opacity-90 object-contain"
+                          />
+                        </div>
                         
                         {/* Content */}
                         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
@@ -1692,10 +1698,11 @@ export default function ChatPage({ params }: Params) {
                                 style={{ transformOrigin: "center center" }}
                                 className="w-full h-full"
                               >
-                                <img 
+                                <Image 
                                   src="/Claudable_simbol.png" 
                                   alt="Claudable" 
-                                  className="w-full h-full opacity-80 object-contain"
+                                  fill
+                                  className="opacity-80 object-contain"
                                 />
                               </MotionDiv>
                             </div>
@@ -1706,11 +1713,14 @@ export default function ChatPage({ params }: Params) {
                           </>
                         ) : (
                           <>
-                            <img 
-                              src="/Claudable_simbol.png" 
-                              alt="Claudable" 
-                              className="w-40 h-40 opacity-80 object-contain mx-auto mb-6"
-                            />
+                            <div className="w-40 h-40 relative mx-auto mb-6">
+                              <Image 
+                                src="/Claudable_simbol.png" 
+                                alt="Claudable" 
+                                fill
+                                className="opacity-80 object-contain"
+                              />
+                            </div>
                             
                             <MotionButton
                               onClick={!isRunning ? start : undefined}

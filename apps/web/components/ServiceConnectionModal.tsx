@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080';
@@ -32,14 +32,7 @@ export default function ServiceConnectionModal({
   const [savedToken, setSavedToken] = useState<ServiceToken | null>(null);
   const [showTokenInput, setShowTokenInput] = useState(false);
 
-  // Load saved token on mount
-  useEffect(() => {
-    if (isOpen) {
-      loadSavedToken();
-    }
-  }, [isOpen, provider]);
-
-  const loadSavedToken = async () => {
+  const loadSavedToken = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/api/tokens/${provider}`);
       if (response.ok) {
@@ -52,7 +45,14 @@ export default function ServiceConnectionModal({
       console.error('Failed to load saved token:', error);
       setSavedToken(null);
     }
-  };
+  }, [provider]);
+
+  // Load saved token on mount
+  useEffect(() => {
+    if (isOpen) {
+      loadSavedToken();
+    }
+  }, [isOpen, loadSavedToken]);
 
   const handleSaveToken = async () => {
     if (!token.trim()) {

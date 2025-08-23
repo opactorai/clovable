@@ -142,7 +142,7 @@ export default function CreateProjectModal({ open, onClose, onCreated, onOpenGlo
     if (open && !globalSettings) {
       loadGlobalSettings();
     }
-  }, [open]);
+  }, [open, globalSettings]);
 
   const loadGlobalSettings = async () => {
     try {

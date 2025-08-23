@@ -58,15 +58,15 @@ export default function DeleteProjectModal({
 
             {/* Description */}
             <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
-              You're about to permanently delete the project{' '}
-              <span className="font-semibold text-gray-900 dark:text-white">"{projectName}"</span>. 
+              You&apos;re about to permanently delete the project{' '}
+              <span className="font-semibold text-gray-900 dark:text-white">&quot;{projectName}&quot;</span>. 
               This action cannot be undone.
             </p>
 
             {/* Confirmation Input */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                To confirm, type "delete" below:
+                To confirm, type &quot;delete&quot; below:
               </label>
               <input
                 type="text"

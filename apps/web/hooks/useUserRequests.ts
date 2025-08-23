@@ -14,7 +14,7 @@ export function useUserRequests({ projectId }: UseUserRequestsOptions) {
   const [activeCount, setActiveCount] = useState(0);
   const [isTabVisible, setIsTabVisible] = useState(true); // 기본값 true로 설정
   
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const previousActiveState = useRef(false);
 
   // 탭 활성화 상태 추적

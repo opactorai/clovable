@@ -33,7 +33,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
         root.classList.remove('dark');
       }
     }
-  }, []);
+  }, [theme]);
 
   useEffect(() => {
     if (typeof document !== 'undefined') {

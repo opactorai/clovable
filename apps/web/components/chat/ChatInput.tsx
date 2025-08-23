@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { SendHorizontal, MessageSquare, Image, Wrench } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080';
@@ -99,7 +99,7 @@ export default function ChatInput({
   };
 
   // Handle files (for both drag drop and file input)
-  const handleFiles = async (files: FileList) => {
+  const handleFiles = useCallback(async (files: FileList) => {
     if (!projectId || preferredCli === 'cursor') return;
     
     setIsUploading(true);
@@ -148,7 +148,7 @@ export default function ChatInput({
         fileInputRef.current.value = '';
       }
     }
-  };
+  }, [projectId, preferredCli]);
 
   // Drag and drop handlers
   const handleDragEnter = (e: React.DragEvent) => {
@@ -241,7 +241,7 @@ export default function ChatInput({
     return () => {
       document.removeEventListener('paste', handlePaste);
     };
-  }, [projectId, preferredCli]);
+  }, [projectId, preferredCli, handleFiles]);
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -269,6 +269,7 @@ export default function ChatInput({
         <div className="mb-2 flex flex-wrap gap-2 mr-2 md:mr-0">
           {uploadedImages.map((image, index) => (
             <div key={image.id} className="relative group">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={image.url} 
                 alt={image.filename}
@@ -341,6 +342,7 @@ export default function ChatInput({
                   className="flex items-center justify-center w-8 h-8 text-gray-300 dark:text-gray-600 cursor-not-allowed opacity-50 rounded-full"
                   title="Cursor CLI doesn't support image input"
                 >
+                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
                   <Image className="h-4 w-4" />
                 </div>
               ) : (
@@ -348,6 +350,7 @@ export default function ChatInput({
                   className="flex items-center justify-center w-8 h-8 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Upload images"
                 >
+                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
                   <Image className="h-4 w-4" />
                   <input
                     ref={fileInputRef}

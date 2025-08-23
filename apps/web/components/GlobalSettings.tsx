@@ -5,6 +5,7 @@ import { MotionDiv } from '@/lib/motion';
 import { useTheme } from '@/components/ThemeProvider';
 import ServiceConnectionModal from '@/components/ServiceConnectionModal';
 import { FaCog } from 'react-icons/fa';
+import Image from 'next/image';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8080';
 
@@ -548,10 +549,14 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
                           <div>
                               <div className="flex items-center gap-2">
                                 {cli.id === 'claude' && (
-                                  <img src="/claude.png" alt="Claude" className="w-5 h-5" />
+                                  <div className="w-5 h-5 relative">
+                                    <Image src="/claude.png" alt="Claude" fill className="object-contain" />
+                                  </div>
                                 )}
                                 {cli.id === 'cursor' && (
-                                  <img src="/cursor.png" alt="Cursor" className="w-5 h-5" />
+                                  <div className="w-5 h-5 relative">
+                                    <Image src="/cursor.png" alt="Cursor" fill className="object-contain" />
+                                  </div>
                                 )}
                                 <h4 className="font-medium text-gray-900 dark:text-white">{cli.name}</h4>
                                 {isChecking ? (
@@ -629,10 +634,14 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
                                 <div>
                                     <div className="flex items-center gap-2">
                                       {cli.id === 'claude' && (
-                                        <img src="/claude.png" alt="Claude" className="w-5 h-5" />
+                                        <div className="w-5 h-5 relative">
+                                          <Image src="/claude.png" alt="Claude" fill className="object-contain" />
+                                        </div>
                                       )}
                                       {cli.id === 'cursor' && (
-                                        <img src="/cursor.png" alt="Cursor" className="w-5 h-5" />
+                                        <div className="w-5 h-5 relative">
+                                          <Image src="/cursor.png" alt="Cursor" fill className="object-contain" />
+                                        </div>
                                       )}
                                       <h4 className="font-medium text-gray-900 dark:text-white">{cli.name}</h4>
                                       {isChecking ? (
@@ -757,11 +766,12 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
             {activeTab === 'about' && (
               <div className="space-y-6">
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-4">
-                    <img 
+                  <div className="w-16 h-16 mx-auto mb-4 relative">
+                    <Image 
                       src="/Claudable_simbol.png" 
                       alt="Claudable Symbol" 
-                      className="w-full h-full object-contain"
+                      fill
+                      className="object-contain"
                     />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Claudable</h3>

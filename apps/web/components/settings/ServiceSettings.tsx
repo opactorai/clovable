@@ -2,7 +2,7 @@
  * Service Settings Component
  * Manage service integrations
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import GitHubRepoModal from '@/components/GitHubRepoModal';
 import VercelProjectModal from '@/components/VercelProjectModal';
 import SupabaseModal from '@/components/SupabaseModal';
@@ -109,7 +109,7 @@ export function ServiceSettings({ projectId, onOpenGlobalSettings }: ServiceSett
   };
 
   // Load service connections from API
-  const loadServiceConnections = async () => {
+  const loadServiceConnections = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/api/projects/${projectId}/services`);
       if (!response.ok) return;
@@ -129,7 +129,7 @@ export function ServiceSettings({ projectId, onOpenGlobalSettings }: ServiceSett
     } catch (error) {
       console.error('Failed to load service connections:', error);
     }
-  };
+  }, [projectId]);
 
   // Check if tokens exist for all services
   const checkTokens = async () => {
@@ -159,7 +159,7 @@ export function ServiceSettings({ projectId, onOpenGlobalSettings }: ServiceSett
   useEffect(() => {
     loadServiceConnections();
     checkTokens();
-  }, [projectId]);
+  }, [projectId, loadServiceConnections]);
 
   const handleConnect = async (serviceId: string) => {
     if (serviceId === 'github') {

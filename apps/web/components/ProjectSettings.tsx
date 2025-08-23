@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ServiceConnectionModal from '@/components/ServiceConnectionModal';
 import EnvironmentVariablesTab from '@/components/EnvironmentVariablesTab';
@@ -205,6 +205,7 @@ export default function ProjectSettings({ isOpen, onClose, projectId, projectNam
       };
       loadData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, projectId]);
 
   // Update active tab when initialTab changes
@@ -212,7 +213,7 @@ export default function ProjectSettings({ isOpen, onClose, projectId, projectNam
     setActiveTab(initialTab);
   }, [initialTab]);
 
-  const loadProjectInfo = async () => {
+  const loadProjectInfo = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/api/projects/${projectId}`);
       if (response.ok) {
@@ -222,9 +223,9 @@ export default function ProjectSettings({ isOpen, onClose, projectId, projectNam
     } catch (error) {
       console.error('Failed to load project info:', error);
     }
-  };
+  }, [projectId]);
 
-  const loadProjectCLIInfo = async () => {
+  const loadProjectCLIInfo = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/api/chat/${projectId}/cli/available`);
       if (response.ok) {
@@ -238,9 +239,9 @@ export default function ProjectSettings({ isOpen, onClose, projectId, projectNam
     } catch (error) {
       console.error('Failed to load project CLI info:', error);
     }
-  };
+  }, [projectId]);
 
-  const loadServiceConnections = async () => {
+  const loadServiceConnections = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/api/projects/${projectId}/services`);
       if (response.ok) {
@@ -250,7 +251,7 @@ export default function ProjectSettings({ isOpen, onClose, projectId, projectNam
     } catch (error) {
       console.error('Failed to load service connections:', error);
     }
-  };
+  }, [projectId]);
 
   const loadGlobalSettings = async () => {
     try {
@@ -757,7 +758,7 @@ export default function ProjectSettings({ isOpen, onClose, projectId, projectNam
                     <div>
                       <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Enable Fallback for This Project</h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Automatically try other AIs when this project's preferred CLI is unavailable
+                        Automatically try other AIs when this project&apos;s preferred CLI is unavailable
                       </p>
                     </div>
                     <div className={`w-12 h-6 rounded-full transition-colors ${

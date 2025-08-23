@@ -80,6 +80,7 @@ export function MessageInput({
           {uploadedImages.map((image, index) => (
             <div key={index} className="relative group">
               <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={image.url} 
                   alt={image.name}
