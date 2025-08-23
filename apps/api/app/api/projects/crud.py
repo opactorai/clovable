@@ -9,16 +9,12 @@ from datetime import datetime
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 import re
-import uuid
 import asyncio
-import os
 
 from app.api.deps import get_db
 from app.models.projects import Project as ProjectModel
 from app.models.messages import Message
 from app.models.project_services import ProjectServiceConnection
-from app.models.sessions import Session as SessionModel
-from app.services.project.initializer import initialize_project
 from app.core.websocket.manager import manager as websocket_manager
 
 # Project ID validation regex
@@ -154,7 +150,6 @@ async def initialize_project_background(project_id: str, project_name: str, body
 async def install_dependencies_background(project_id: str, project_path: str):
     """Install dependencies in background"""
     try:
-        import subprocess
         import os
         
         # Check if package.json exists

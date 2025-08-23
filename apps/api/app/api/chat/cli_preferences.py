@@ -5,7 +5,7 @@ Handles CLI selection and configuration
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional
 
 from app.api.deps import get_db
 from app.models.projects import Project

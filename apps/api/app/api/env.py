@@ -7,7 +7,6 @@ from app.api.deps import get_db
 from app.models.env_vars import EnvVar
 from app.models.projects import Project as ProjectModel
 from app.services.env_manager import (
-    load_env_vars_from_db,
     create_env_var,
     update_env_var,
     delete_env_var,

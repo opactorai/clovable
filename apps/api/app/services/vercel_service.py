@@ -127,7 +127,7 @@ class VercelService:
                         try:
                             error_data = await response.json()
                             error_msg = error_data.get("error", {}).get("message", "Unknown error")
-                        except:
+                        except Exception:
                             error_msg = await response.text()
                         raise VercelAPIError(f"Failed to get project: {error_msg}", response.status)
         except VercelAPIError:
@@ -228,7 +228,7 @@ class VercelService:
                         try:
                             error_data = await response.json()
                             error_msg = error_data.get("error", {}).get("message", "Unknown error")
-                        except:
+                        except Exception:
                             error_msg = await response.text()
                         raise VercelAPIError(f"Failed to get deployment: {error_msg}", response.status)
         except Exception as e:
@@ -262,7 +262,7 @@ async def check_project_availability(access_token: str, project_name: str) -> Di
                     try:
                         error_data = await response.json()
                         error_msg = error_data.get("error", {}).get("message", "Unknown error")
-                    except:
+                    except Exception:
                         error_msg = await response.text()
                     
                     if response.status == 401:
@@ -340,7 +340,7 @@ async def monitor_deployment_status(
                 
                 # 완료 상태 체크 - ready 필드도 확인
                 is_ready = (status_data["status"] == "READY" or 
-                           status_data.get("ready") == True or
+                           status_data.get("ready") is True or
                            status_data.get("readyState") == "READY")
                 is_error = status_data["status"] == "ERROR"
                 
@@ -377,7 +377,6 @@ async def update_deployment_status_in_db(
     
     try:
         # DB 세션 생성 (비동기 환경에서 새 세션 필요)
-        from sqlalchemy.orm import sessionmaker
         from app.models.project_services import ProjectServiceConnection
         
         Session = db_session_factory

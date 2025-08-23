@@ -1,7 +1,7 @@
 """
 Unified message model for all chat, Claude Code SDK, and tool interactions
 """
-from sqlalchemy import String, DateTime, ForeignKey, Text, JSON, Integer, Numeric, Boolean
+from sqlalchemy import String, DateTime, ForeignKey, Text, JSON, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from app.db.base import Base

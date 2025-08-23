@@ -313,7 +313,7 @@ async def deploy_to_vercel(
                 vercel_token=vercel_token,
                 db_session_factory=SessionLocal
             )
-            logger.info(f"🚀 Background monitoring started successfully")
+            logger.info("🚀 Background monitoring started successfully")
         except Exception as e:
             logger.error(f"❌ Failed to start deployment monitoring: {e}")
             import traceback

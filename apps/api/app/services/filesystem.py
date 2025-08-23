@@ -1,8 +1,6 @@
 import os
-import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 
 def ensure_dir(path: str) -> None:
@@ -18,8 +16,6 @@ def init_git_repo(repo_path: str) -> None:
 def scaffold_nextjs_minimal(repo_path: str) -> None:
     """Create Next.js project using official create-next-app"""
     import subprocess
-    import tempfile
-    import shutil
     
     # Get parent directory to create project in
     parent_dir = Path(repo_path).parent
@@ -65,9 +61,9 @@ def scaffold_nextjs_minimal(repo_path: str) -> None:
         # Users can run 'npm install' manually when needed
         ui.info("Skipped dependency installation for faster setup", "Filesystem")
         
-    except subprocess.TimeoutExpired as e:
+    except subprocess.TimeoutExpired:
         ui.error("create-next-app timed out after 5 minutes", "Filesystem")
-        raise Exception(f"Project creation timed out. This might be due to slow network or hung process.")
+        raise Exception("Project creation timed out. This might be due to slow network or hung process.")
     except subprocess.CalledProcessError as e:
         ui.error(f"Error creating Next.js app: {e}", "Filesystem")
         ui.debug(f"Command: {' '.join(cmd)}", "Filesystem")

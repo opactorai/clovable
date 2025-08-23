@@ -25,7 +25,7 @@ async def upload_logo(project_id: str, body: LogoRequest, db: Session = Depends(
     data = base64.b64decode(body.b64_png)
     logo_path = os.path.join(project_assets, "logo.png")
     write_bytes(logo_path, data)
-    return {"path": f"assets/logo.png"}
+    return {"path": "assets/logo.png"}
 
 
 @router.post("/{project_id}/upload")

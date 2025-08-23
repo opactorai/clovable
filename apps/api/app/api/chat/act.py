@@ -3,10 +3,9 @@ Act Execution API Endpoints
 Handles CLI execution and AI actions
 """
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from typing import List, Optional
+from typing import List
 from datetime import datetime
 import uuid
-import asyncio
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 

@@ -2,9 +2,7 @@
 GitHub API service for repository management
 """
 import httpx
-import json
 from typing import Dict, Any, Optional
-from urllib.parse import quote
 import logging
 
 logger = logging.getLogger(__name__)

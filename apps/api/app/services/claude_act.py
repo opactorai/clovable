@@ -1,13 +1,12 @@
 import os
 from typing import Tuple, Optional, Callable
-import json
 from datetime import datetime
 from pathlib import Path
 
 from claude_code_sdk import query, ClaudeCodeOptions
 from claude_code_sdk.types import (
-    Message, UserMessage, AssistantMessage, SystemMessage, ResultMessage,
-    ContentBlock, TextBlock, ThinkingBlock, ToolUseBlock, ToolResultBlock
+    AssistantMessage, SystemMessage, ResultMessage,
+    TextBlock, ThinkingBlock, ToolUseBlock, ToolResultBlock
 )
 
 
@@ -127,7 +126,7 @@ def extract_tool_summary(tool_name: str, tool_input: dict) -> str:
     elif tool_name == "WebFetch":
         return f"🌐 Fetching: {tool_input.get('url', 'unknown')}"
     elif tool_name == "TodoWrite":
-        return f"📝 Managing todos"
+        return "📝 Managing todos"
     else:
         return f"🔧 {tool_name}: {list(tool_input.keys())[:3]}"
 
@@ -245,7 +244,7 @@ async def generate_diff_with_logging(
                                     content_str = str(block.content)
                                     if "updated" in content_str.lower() or "modified" in content_str.lower():
                                         diff_info = content_str
-                                except:
+                                except Exception:
                                     pass
                             
                             await log_callback("tool_result", {

@@ -12,7 +12,6 @@ from app.services.token_service import (
     save_service_token,
     get_service_token,
     delete_service_token,
-    get_token,
     update_last_used
 )
 

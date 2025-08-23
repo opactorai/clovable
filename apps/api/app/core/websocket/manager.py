@@ -5,7 +5,6 @@ Handles WebSocket connections for real-time chat updates
 from typing import Dict, List
 import json
 from fastapi import WebSocket
-from app.core.terminal_ui import ui
 
 
 class ConnectionManager:

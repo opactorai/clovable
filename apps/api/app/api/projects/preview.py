@@ -205,18 +205,3 @@ async def restart_preview(
     )
 
 
-@router.get("/{project_id}/error-logs")
-async def get_all_error_logs(
-    project_id: str,
-    db: Session = Depends(get_db)
-):
-    """Get all error logs from the preview process"""
-    
-    project = db.get(ProjectModel, project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    
-    # Get all stored logs for this project
-    all_logs = get_all_preview_logs(project_id)
-    
-    return {"logs": all_logs, "project_id": project_id}

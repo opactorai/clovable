@@ -3,16 +3,23 @@ Clean Terminal UI System
 Inspired by Claude Code's design principles
 """
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 from enum import Enum
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.layout import Layout
 from rich import box
 import sys
+import os
+
+# Initialize colorama for Windows support
+if sys.platform == "win32":
+    try:
+        from colorama import init
+        init()
+    except ImportError:
+        pass
 
 
 class LogLevel(Enum):
@@ -27,7 +34,18 @@ class TerminalUI:
     """Clean terminal interface without emojis"""
     
     def __init__(self):
-        self.console = Console(file=sys.stdout, force_terminal=True)
+        # Configure console for Windows compatibility
+        if sys.platform == "win32":
+            # Force UTF-8 encoding on Windows
+            os.environ["PYTHONIOENCODING"] = "utf-8"
+            self.console = Console(
+                force_terminal=True,
+                legacy_windows=False,  # Use new Windows terminal features if available
+                no_color=False,
+                force_interactive=True
+            )
+        else:
+            self.console = Console(file=sys.stdout, force_terminal=True)
         self._setup_colors()
     
     def _setup_colors(self):
@@ -93,29 +111,20 @@ class TerminalUI:
         self.console.print(panel)
     
     def ascii_logo(self):
-        """Display ASCII art logo for Claudable"""
-        # Create "CLAUDABLE" logo with orange color from the image
-        logo_text = Text()
-        
-        # CLAUDABLE ASCII art
-        logo_text.append(" ██████╗██╗      █████╗ ██╗   ██╗██████╗  █████╗ ██████╗ ██╗     ███████╗\n", style="rgb(182,109,77)")
-        logo_text.append("██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔══██╗██╔══██╗██║     ██╔════╝\n", style="rgb(182,109,77)")
-        logo_text.append("██║     ██║     ███████║██║   ██║██║  ██║███████║██████╔╝██║     █████╗  \n", style="rgb(182,109,77)")
-        logo_text.append("██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══██║██╔══██╗██║     ██╔══╝  \n", style="rgb(182,109,77)")
-        logo_text.append("╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝██║  ██║██████╔╝███████╗███████╗\n", style="rgb(182,109,77)")
-        logo_text.append(" ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝", style="rgb(182,109,77)")
-        
+        """Display ASCII art logo for Claudable - Windows compatible"""
+        # Use simple ASCII art that works on Windows
         self.console.print()
-        
-        # Print the logo
-        self.console.print(logo_text)
+        self.console.print("[bold rgb(182,109,77)]   _____ _                 _       _     _      [/bold rgb(182,109,77)]")
+        self.console.print("[bold rgb(182,109,77)]  / ____| |               | |     | |   | |     [/bold rgb(182,109,77)]")
+        self.console.print("[bold rgb(182,109,77)] | |    | | __ _ _   _  __| | __ _| |__ | | ___ [/bold rgb(182,109,77)]")
+        self.console.print("[bold rgb(182,109,77)] | |    | |/ _` | | | |/ _` |/ _` | '_ \\| |/ _ \\[/bold rgb(182,109,77)]")
+        self.console.print("[bold rgb(182,109,77)] | |____| | (_| | |_| | (_| | (_| | |_) | |  __/[/bold rgb(182,109,77)]")
+        self.console.print("[bold rgb(182,109,77)]  \\_____|_|\\__,_|\\__,_|\\__,_|\\__,_|_.__/|_|\\___|[/bold rgb(182,109,77)]")
         self.console.print()
         
         # Tagline
-        tagline = Text("Connect Claude Code. Build what you want. Deploy instantly.", style="rgb(182,109,77) bold")
-        
-        self.console.print(tagline)
-        self.console.print()  # Add blank line
+        self.console.print("[rgb(182,109,77)]Connect Claude Code. Build what you want. Deploy instantly.[/rgb(182,109,77)]")
+        self.console.print()
     
     def status_line(self, items: Dict[str, str]):
         """Display a status line with key-value pairs"""
@@ -137,7 +146,6 @@ class TerminalUI:
     
     def connection_status(self, project_id: str, status: str):
         """WebSocket connection status"""
-        status_color = "green" if status == "connected" else "red" if status == "disconnected" else "yellow"
         self.log(f"WebSocket {status} for project: {project_id}", LogLevel.INFO, "WebSocket")
     
     def session_info(self, session_id: str, cli_type: str, model: str):

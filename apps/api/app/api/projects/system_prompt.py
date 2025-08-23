@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.models.projects import Project as ProjectModel
-from app.services.claude_act import load_system_prompt, get_system_prompt
+from app.services.claude_act import get_system_prompt
 
 
 router = APIRouter()

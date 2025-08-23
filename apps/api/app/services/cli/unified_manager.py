@@ -11,8 +11,13 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Optional, Callable, Dict, Any, AsyncGenerator, List
 from enum import Enum
-import tempfile
-import base64
+
+from app.models.messages import Message
+from app.core.websocket.manager import manager as ws_manager
+from app.core.terminal_ui import ui
+
+# Claude Code SDK imports
+from claude_code_sdk import ClaudeSDKClient, ClaudeCodeOptions
 
 
 def get_project_root() -> str:
@@ -35,14 +40,6 @@ def get_display_path(file_path: str) -> str:
     except Exception:
         pass
     return file_path
-
-from app.models.messages import Message
-from app.models.sessions import Session
-from app.core.websocket.manager import manager as ws_manager
-from app.core.terminal_ui import ui
-
-# Claude Code SDK imports
-from claude_code_sdk import ClaudeSDKClient, ClaudeCodeOptions
 
 
 # Model mapping from unified names to CLI-specific names
@@ -573,7 +570,7 @@ public/
 node_modules/
 </initial_context>"""
             instruction = instruction + project_structure_info
-            ui.info(f"Added project structure info to initial prompt", "Claude SDK")
+            ui.info("Added project structure info to initial prompt", "Claude SDK")
         
         # Configure tools based on initial prompt status
         if is_initial_prompt:
@@ -1193,10 +1190,10 @@ class CursorAgentCLI(BaseCLI):
                     
                     # ★ CRITICAL: Break after result event to end streaming
                     if result_received:
-                        print(f"🏁 [Cursor] Result event received, terminating stream early")
+                        print("🏁 [Cursor] Result event received, terminating stream early")
                         try:
                             process.terminate()
-                            print(f"🔪 [Cursor] Process terminated")
+                            print("🔪 [Cursor] Process terminated")
                         except Exception as e:
                             print(f"⚠️ [Cursor] Failed to terminate process: {e}")
                         break
@@ -1297,7 +1294,7 @@ class CursorAgentCLI(BaseCLI):
                 import traceback
                 traceback.print_exc()
         else:
-            print(f"⚠️ [Cursor] No DB session available")
+            print("⚠️ [Cursor] No DB session available")
         
         # Fallback to in-memory storage
         self._session_store[project_id] = session_id
@@ -1425,7 +1422,7 @@ class UnifiedCLIManager:
                     subtype = original_event.get("subtype", "")
                     
                     # ★ DEBUG: Log the complete result event structure
-                    ui.info(f"🔍 [Cursor] Result event received:", "DEBUG")
+                    ui.info("🔍 [Cursor] Result event received:", "DEBUG")
                     ui.info(f"   Full event: {original_event}", "DEBUG")
                     ui.info(f"   is_error: {is_error}", "DEBUG")
                     ui.info(f"   subtype: '{subtype}'", "DEBUG")
@@ -1446,7 +1443,7 @@ class UnifiedCLIManager:
                         # If there's no error indication, assume success
                         if not is_error:
                             result_success = True
-                            ui.success(f"Cursor result: assuming success (no error detected)", "CLI")
+                            ui.success("Cursor result: assuming success (no error detected)", "CLI")
             
             # Save message to database
             message.project_id = self.project_id

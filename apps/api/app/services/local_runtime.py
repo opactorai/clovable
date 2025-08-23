@@ -54,7 +54,6 @@ def _monitor_preview_errors(project_id: str, process: subprocess.Popen):
     ]
     
     recent_errors = {}     # 에러 ID별 마지막 전송 시간
-    error_contexts = {}    # 에러별 컨텍스트 수집
     current_error = None   # 현재 처리 중인 에러
     error_lines = []       # 에러 관련 라인들
     
@@ -119,7 +118,7 @@ def _monitor_preview_errors(project_id: str, process: subprocess.Popen):
                     loop.run_until_complete(
                         manager.send_message(project_id, success_message)
                     )
-                    print(f"[PreviewSuccess] WebSocket 전송 성공!")
+                    print("[PreviewSuccess] WebSocket 전송 성공!")
                 except Exception as e:
                     print(f"[PreviewSuccess] WebSocket 전송 실패: {e}")
                 
@@ -227,7 +226,7 @@ def _should_install_dependencies(repo_path: str) -> bool:
     
     # If node_modules doesn't exist, definitely need to install
     if not os.path.exists(node_modules_path):
-        print(f"node_modules not found, will install dependencies")
+        print("node_modules not found, will install dependencies")
         return True
     
     # Calculate current hash of package files

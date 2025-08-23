@@ -4,10 +4,9 @@ Environment Variables Manager
 Handles synchronization between database and .env files in Next.js projects.
 """
 
-import os
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
 from app.models.env_vars import EnvVar
 from app.core.crypto import secret_box

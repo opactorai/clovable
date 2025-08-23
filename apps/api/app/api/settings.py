@@ -1,10 +1,8 @@
-import subprocess
 import asyncio
-import json
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
-from app.services.cli.unified_manager import CLIType, CursorAgentCLI
+from app.services.cli.unified_manager import CursorAgentCLI
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -83,7 +81,7 @@ async def get_cli_status() -> Dict[str, Any]:
     results = {}
     
     # 새로운 UnifiedCLIManager의 CLI 인스턴스 사용
-    from app.services.cli.unified_manager import ClaudeCodeCLI, CursorAgentCLI
+    from app.services.cli.unified_manager import ClaudeCodeCLI
     cli_instances = {
         "claude": ClaudeCodeCLI(),
         "cursor": CursorAgentCLI()

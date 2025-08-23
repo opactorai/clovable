@@ -1,6 +1,4 @@
 import subprocess
-from typing import List, Optional
-import os
 
 
 def _run(cmd: list[str], cwd: str) -> str:

@@ -5,10 +5,10 @@ Handles project initialization, scaffolding, and setup
 import os
 import json
 import shutil
-from pathlib import Path
 from typing import Optional
 
 from app.core.config import settings
+from app.core.terminal_ui import ui
 from app.services.filesystem import (
     ensure_dir,
     scaffold_nextjs_minimal,
