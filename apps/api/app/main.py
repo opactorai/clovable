@@ -1,3 +1,10 @@
+import os
+import sys
+
+# Fix Windows console encoding for Unicode output
+if sys.platform == "win32":
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -14,7 +21,6 @@ from app.api.github import router as github_router
 from app.api.vercel import router as vercel_router
 from app.core.logging import configure_logging
 from app.core.terminal_ui import ui
-from sqlalchemy import inspect
 from app.db.base import Base
 import app.models  # noqa: F401 ensures models are imported for metadata
 from app.db.session import engine
@@ -76,7 +82,6 @@ def health():
 def on_startup() -> None:
     # Auto create tables if not exist; production setups should use Alembic
     ui.info("Initializing database tables")
-    inspector = inspect(engine)
     Base.metadata.create_all(bind=engine)
     ui.success("Database initialization complete")
     
