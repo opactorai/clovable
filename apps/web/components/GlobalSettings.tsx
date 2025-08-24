@@ -143,6 +143,12 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [testingPermission, setTestingPermission] = useState(false);
+  const [permissionTestResult, setPermissionTestResult] = useState<{ 
+    success: boolean; 
+    message: string; 
+    isRoot?: boolean 
+  } | null>(null);
 
   // Load all service tokens and CLI data
   useEffect(() => {
@@ -296,6 +302,66 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
         }
       }
     }));
+  };
+
+  const setPermissionMode = (cliId: string, mode: string) => {
+    setGlobalSettings(prev => ({
+      ...prev,
+      cli_settings: {
+        ...prev.cli_settings,
+        [cliId]: {
+          ...prev.cli_settings[cliId],
+          permission_mode: mode
+        }
+      }
+    }));
+    // Clear test result when permission mode changes
+    setPermissionTestResult(null);
+  };
+
+  const testPermissionMode = async (mode: string) => {
+    setTestingPermission(true);
+    setPermissionTestResult(null);
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/settings/test-permission-mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permission_mode: mode })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setPermissionTestResult({
+          success: true,
+          message: result.message || 'Configuration working',
+          isRoot: result.is_root
+        });
+      } else {
+        setPermissionTestResult({
+          success: false,
+          message: result.error || 'Test failed',
+          isRoot: result.is_root
+        });
+        
+        // If it's a root permission issue, suggest changing to acceptEdits
+        if (result.suggestion && result.suggestion.includes('acceptEdits')) {
+          // Automatically switch to acceptEdits if bypassPermissions fails due to root
+          if (mode === 'bypassPermissions' && result.is_root) {
+            setPermissionMode('claude', 'acceptEdits');
+          }
+        }
+      }
+    } catch (error) {
+      setPermissionTestResult({
+        success: false,
+        message: `Network error: ${error}`,
+        isRoot: false
+      });
+    } finally {
+      setTestingPermission(false);
+    }
   };
 
   const getProviderIcon = (provider: string) => {
@@ -584,7 +650,7 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
                         </div>
 
                         {/* Default Model Selection */}
-                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                               Default Model
@@ -602,6 +668,80 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
                               ))}
                             </select>
                           </div>
+                          
+                          {/* Permission Mode for Claude only */}
+                          {cli.id === 'claude' && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Permission Mode
+                              </label>
+                              <div className="flex gap-2">
+                                <select
+                                  value={settings.permission_mode || 'acceptEdits'}
+                                  onChange={(e) => setPermissionMode(cli.id, e.target.value)}
+                                  className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                                >
+                                  <option value="acceptEdits">Accept Edits (Recommended)</option>
+                                  <option value="bypassPermissions">Bypass Permissions (Non-root only)</option>
+                                </select>
+                                <button
+                                  onClick={() => testPermissionMode(settings.permission_mode || 'acceptEdits')}
+                                  disabled={testingPermission}
+                                  className="px-3 py-2 text-sm bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                                >
+                                  {testingPermission ? (
+                                    <>
+                                      <span className="animate-spin">⚙️</span>
+                                      Testing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      🧪 Test
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                              
+                              {/* Permission Mode Warning */}
+                              {settings.permission_mode === 'bypassPermissions' && (
+                                <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                                  <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                                    ⚠️ "Bypass Permissions" mode will not work when running as root/sudo. 
+                                    Use "Accept Edits" for Docker or WSL environments.
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {/* Test Result */}
+                              {permissionTestResult && (
+                                <div className={`mt-2 p-2 rounded-lg ${
+                                  permissionTestResult.success 
+                                    ? 'bg-green-50 dark:bg-green-900/20' 
+                                    : 'bg-red-50 dark:bg-red-900/20'
+                                }`}>
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-sm">
+                                      {permissionTestResult.success ? '✅' : '❌'}
+                                    </span>
+                                    <div className="flex-1">
+                                      <p className={`text-xs ${
+                                        permissionTestResult.success 
+                                          ? 'text-green-700 dark:text-green-400' 
+                                          : 'text-red-700 dark:text-red-400'
+                                      }`}>
+                                        {permissionTestResult.message}
+                                      </p>
+                                      {permissionTestResult.isRoot && (
+                                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                          Running as: {permissionTestResult.isRoot ? 'root user' : 'regular user'}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
