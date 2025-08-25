@@ -1,6 +1,7 @@
 import subprocess
 import asyncio
 import json
+import os
 from typing import Dict, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -117,7 +118,10 @@ async def get_cli_status() -> Dict[str, Any]:
 GLOBAL_SETTINGS = {
     "default_cli": "claude",
     "cli_settings": {
-        "claude": {"model": "claude-sonnet-4"},
+        "claude": {
+            "model": "claude-sonnet-4",
+            "permission_mode": "acceptEdits"  # acceptEdits or bypassPermissions
+        },
         "cursor": {"model": "gpt-5"}
     }
 }
@@ -144,3 +148,83 @@ async def update_global_settings(settings: GlobalSettingsModel) -> Dict[str, Any
     })
     
     return {"success": True, "settings": GLOBAL_SETTINGS}
+
+
+class TestPermissionRequest(BaseModel):
+    permission_mode: str = "acceptEdits"  # acceptEdits or bypassPermissions
+
+
+@router.post("/test-permission-mode")
+async def test_permission_mode(request: TestPermissionRequest) -> Dict[str, Any]:
+    """Test if the specified permission mode works with Claude CLI."""
+    
+    # Check if running as root
+    is_root = os.geteuid() == 0 if hasattr(os, 'geteuid') else False
+    
+    # Build test command based on permission mode
+    if request.permission_mode == "bypassPermissions":
+        if is_root:
+            return {
+                "success": False,
+                "error": "Cannot use 'bypassPermissions' mode when running as root/sudo",
+                "suggestion": "Use 'acceptEdits' mode instead for root environments",
+                "is_root": is_root
+            }
+        # Test with bypass permissions flag
+        test_command = ["claude", "--dangerously-skip-permissions", "--version"]
+    else:
+        # Test with normal mode (acceptEdits)
+        test_command = ["claude", "--version"]
+    
+    try:
+        # Run the test command
+        process = await asyncio.create_subprocess_exec(
+            *test_command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env={**os.environ, "CLAUDE_NO_INTERACTIVE": "1"}  # Prevent interactive prompts
+        )
+        
+        stdout, stderr = await process.communicate()
+        
+        if process.returncode == 0:
+            version_output = stdout.decode().strip()
+            return {
+                "success": True,
+                "message": f"Permission mode '{request.permission_mode}' is working correctly",
+                "version": version_output.split('\n')[0] if version_output else "Claude CLI detected",
+                "is_root": is_root
+            }
+        else:
+            error_output = stderr.decode().strip()
+            
+            # Check for specific permission error
+            if "dangerously-skip-permissions" in error_output and "root" in error_output:
+                return {
+                    "success": False,
+                    "error": "Permission mode conflict: Cannot bypass permissions as root user",
+                    "suggestion": "Switch to 'acceptEdits' mode for root environments",
+                    "details": error_output,
+                    "is_root": is_root
+                }
+            
+            return {
+                "success": False,
+                "error": f"Claude CLI test failed with permission mode '{request.permission_mode}'",
+                "details": error_output or f"Command failed with exit code {process.returncode}",
+                "is_root": is_root
+            }
+            
+    except FileNotFoundError:
+        return {
+            "success": False,
+            "error": "Claude CLI not found",
+            "suggestion": "Please install Claude Code CLI: npm install -g @anthropic-ai/claude-code",
+            "is_root": is_root
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Failed to test permission mode: {str(e)}",
+            "is_root": is_root
+        }

@@ -525,7 +525,8 @@ class ClaudeCodeCLI(BaseCLI):
         log_callback: Optional[Callable] = None,
         images: Optional[List[Dict[str, Any]]] = None,
         model: Optional[str] = None,
-        is_initial_prompt: bool = False
+        is_initial_prompt: bool = False,
+        permission_mode: Optional[str] = None
     ) -> AsyncGenerator[Message, None]:
         """Execute instruction using Claude Code Python SDK"""
         from app.core.terminal_ui import ui
@@ -549,6 +550,25 @@ class ClaudeCodeCLI(BaseCLI):
         
         # Get CLI-specific model name
         cli_model = self._get_cli_model_name(model) or "claude-sonnet-4-20250514"
+        
+        # Determine permission mode (from parameter, settings, or default)
+        if permission_mode is None:
+            # Try to get from global settings
+            try:
+                from app.api.settings import GLOBAL_SETTINGS
+                permission_mode = GLOBAL_SETTINGS.get("cli_settings", {}).get("claude", {}).get("permission_mode", "acceptEdits")
+                ui.info(f"Using permission mode from settings: {permission_mode}", "Claude SDK")
+            except Exception as e:
+                ui.warning(f"Could not load permission mode from settings: {e}", "Claude SDK")
+                permission_mode = "acceptEdits"
+        
+        # Check if running as root and force acceptEdits if necessary
+        is_root = os.geteuid() == 0 if hasattr(os, 'geteuid') else False
+        if is_root and permission_mode == "bypassPermissions":
+            ui.warning("Running as root - forcing permission_mode to 'acceptEdits'", "Claude SDK")
+            permission_mode = "acceptEdits"
+        
+        ui.info(f"Using permission mode: {permission_mode}", "Claude SDK")
         
         # Add project directory structure for initial prompts
         if is_initial_prompt:
@@ -593,7 +613,7 @@ node_modules/
                 system_prompt=system_prompt,
                 allowed_tools=allowed_tools,
                 disallowed_tools=disallowed_tools,
-                permission_mode="bypassPermissions",
+                permission_mode=permission_mode,  # Use the determined permission mode
                 model=cli_model,
                 continue_conversation=True
             )
@@ -611,7 +631,7 @@ node_modules/
             options = ClaudeCodeOptions(
                 system_prompt=system_prompt,
                 allowed_tools=allowed_tools,
-                permission_mode="bypassPermissions",
+                permission_mode=permission_mode,  # Use the determined permission mode
                 model=cli_model,
                 continue_conversation=True
             )
